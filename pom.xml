@@ -275,5 +275,13 @@
             </plugin>
         </plugins>
     </build>
+  
+    <distributionManagement>
+    	<repository>
+      	    <id>github</id>
+            <name>fibonsai</name>
+	    <url>https://maven.pkg.github.com/fibonsai/reactparquet</url>
+    	</repository>
+    </distributionManagement>
 
 </project>
