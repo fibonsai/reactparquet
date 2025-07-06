@@ -1,6 +1,6 @@
 # ReactParquet
 
-A simple java lib to read parquet files using Spring Reactor approach.
+A simple lib to read parquet files using Project Reactor approach.
 
 The main benefit is to use a parquet file as an event source to subscribe to, when your records will only be read on demand.
 
