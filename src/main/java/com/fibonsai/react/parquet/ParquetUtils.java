@@ -14,7 +14,6 @@
 
 package com.fibonsai.react.parquet;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.hadoop.ParquetFileReader;
@@ -30,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 public class ParquetUtils {
 
     public record TypeWithRepetition(String type,
@@ -70,7 +68,7 @@ public class ParquetUtils {
                 );
             }
         } catch (Exception e) {
-            log.error("Error reading parquet file: {}", filePath);
+            throw new RuntimeException("Error reading parquet file: %s".formatted(filePath));
         }
         return fileInfo;
     }

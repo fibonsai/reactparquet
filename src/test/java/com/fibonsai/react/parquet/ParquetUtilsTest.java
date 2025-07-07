@@ -48,7 +48,6 @@ class ParquetUtilsTest {
 
     @Test
     void showMetadataBadFile() {
-        ParquetUtils.FileInfo fileInfo = ParquetUtils.showMetadata("badfile.parquet");
-        assertNull(fileInfo);
+        assertThrows(RuntimeException.class, () -> ParquetUtils.showMetadata("badfile.parquet"));
     }
 }

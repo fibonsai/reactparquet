@@ -14,7 +14,6 @@
 
 package com.fibonsai.react.parquet;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.column.page.PageReadStore;
@@ -45,7 +44,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 public class ReactParquetReader {
 
     private final Configuration conf = new Configuration();
@@ -64,8 +62,8 @@ public class ReactParquetReader {
                     try {
                         pages = reader.readNextRowGroup();
                     } catch (IOException e) {
-                        log.error(e.getMessage());
                         sink.error(e);
+                        throw new RuntimeException(e.getMessage(), e);
                     }
                     if (pages == null) {
                         sink.complete();
