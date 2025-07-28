@@ -68,7 +68,7 @@ public class ParquetUtils {
                 );
             }
         } catch (Exception e) {
-            throw new RuntimeException("Error reading parquet file: %s".formatted(filePath));
+            throw new RuntimeException("Error reading parquet file: %s".formatted(filePath), e);
         }
         return fileInfo;
     }
