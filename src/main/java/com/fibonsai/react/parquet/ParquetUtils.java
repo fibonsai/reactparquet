@@ -14,17 +14,22 @@
 
 package com.fibonsai.react.parquet;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import org.apache.parquet.ParquetReadOptions;
+import org.apache.parquet.conf.ParquetConfiguration;
+import org.apache.parquet.conf.PlainParquetConfiguration;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
-import org.apache.parquet.hadoop.util.HadoopInputFile;
+import org.apache.parquet.io.LocalInputFile;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,14 +47,13 @@ public class ParquetUtils {
                            Map<String, TypeWithRepetition> fieldsInfo) {}
 
     public static FileInfo showMetadata(String filePath) {
-        Configuration conf = new Configuration();
-        Path path = new Path(filePath);
-
+        final ParquetConfiguration conf = new PlainParquetConfiguration();
         FileInfo fileInfo = null;
         try {
-            final HadoopInputFile inputFile = HadoopInputFile.fromPath(path, conf);
-
-            try (ParquetFileReader reader = ParquetFileReader.open(inputFile)) {
+            final FileSystem fs = FileSystems.getFileSystem(new URI("file", null, "/", null, null));
+            final Path path = fs.getPath(filePath);
+            final LocalInputFile inputFile = new LocalInputFile(path);
+            try (ParquetFileReader reader = new ParquetFileReader(inputFile, ParquetReadOptions.builder(conf).build())) {
                 ParquetMetadata metadata = reader.getFooter();
                 MessageType schema = metadata.getFileMetaData().getSchema();
                 long totalRows = metadata.getBlocks().stream()

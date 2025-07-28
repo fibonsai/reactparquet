@@ -14,13 +14,14 @@
 
 package com.fibonsai.react.parquet;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.column.page.PageReadStore;
+import org.apache.parquet.conf.ParquetConfiguration;
+import org.apache.parquet.conf.PlainParquetConfiguration;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
-import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.io.ColumnIOFactory;
+import org.apache.parquet.io.LocalInputFile;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.io.api.*;
@@ -36,6 +37,10 @@ import reactor.util.function.Tuples;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -46,14 +51,15 @@ import java.util.Map;
 
 public class ReactParquetReader {
 
-    private final Configuration conf = new Configuration();
+    final ParquetConfiguration conf = new PlainParquetConfiguration();
 
     public Flux<Map<String, Object>> readParquetFile(String filePath) {
         return Flux.generate(
                 () -> {
-                    final Path path = new Path(filePath);
-                    var inputFile = HadoopInputFile.fromPath(path, conf);
-                    return ParquetFileReader.open(inputFile);
+                    final FileSystem fs = FileSystems.getFileSystem(new URI("file", null, "/", null, null));
+                    final Path path = fs.getPath(filePath);
+                    final LocalInputFile inputFile = new LocalInputFile(path);
+                    return new ParquetFileReader(inputFile, ParquetReadOptions.builder(conf).build());
                 },
                 (ParquetFileReader reader, SynchronousSink<Tuple2<Long, RecordReader<Map<String, Object>>>> sink) -> {
                     ParquetMetadata metadata = reader.getFooter();
