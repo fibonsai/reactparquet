@@ -21,7 +21,7 @@ import org.apache.parquet.conf.PlainParquetConfiguration;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.io.ColumnIOFactory;
-import org.apache.parquet.io.LocalInputFile;
+import org.apache.parquet.io.InputFile;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.io.api.*;
@@ -58,7 +58,7 @@ public class ReactParquetReader {
                 () -> {
                     final FileSystem fs = FileSystems.getFileSystem(new URI("file", null, "/", null, null));
                     final Path path = fs.getPath(filePath);
-                    final LocalInputFile inputFile = new LocalInputFile(path);
+                    final InputFile inputFile = new NioInputFile(path);
                     return new ParquetFileReader(inputFile, ParquetReadOptions.builder(conf).build());
                 },
                 (ParquetFileReader reader, SynchronousSink<Tuple2<Long, RecordReader<Map<String, Object>>>> sink) -> {
