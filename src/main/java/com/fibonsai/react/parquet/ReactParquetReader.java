@@ -37,10 +37,8 @@ import reactor.util.function.Tuples;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.net.URI;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -56,15 +54,14 @@ public class ReactParquetReader {
     public Flux<Map<String, Object>> readParquetFile(String filePath) {
         return Flux.generate(
                 () -> {
-                    final FileSystem fs = FileSystems.getFileSystem(new URI("file", null, "/", null, null));
-                    final Path path = fs.getPath(filePath);
+                    final Path path = Paths.get(filePath);
                     final InputFile inputFile = new NioInputFile(path);
                     return new ParquetFileReader(inputFile, ParquetReadOptions.builder(conf).build());
                 },
                 (ParquetFileReader reader, SynchronousSink<Tuple2<Long, RecordReader<Map<String, Object>>>> sink) -> {
                     ParquetMetadata metadata = reader.getFooter();
                     MessageType schema = metadata.getFileMetaData().getSchema();
-                    PageReadStore pages = null;
+                    final PageReadStore pages;
                     try {
                         pages = reader.readNextRowGroup();
                     } catch (IOException e) {
