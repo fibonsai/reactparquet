@@ -26,8 +26,8 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +48,8 @@ public class ParquetUtils {
         final ParquetConfiguration conf = new PlainParquetConfiguration();
         final FileInfo fileInfo;
         try {
-            final Path path = Paths.get(filePath);
+            final FileSystem fs = SpiAlternativeUtil.getFileSystem(filePath);
+            final Path path = fs.getPath(filePath);
             final InputFile inputFile = new NioInputFile(path);
             try (ParquetFileReader reader = new ParquetFileReader(inputFile, ParquetReadOptions.builder(conf).build())) {
                 ParquetMetadata metadata = reader.getFooter();
