@@ -14,33 +14,51 @@
 
 package com.fibonsai.react.parquet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.nio.spi.s3.S3FileSystemProvider;
 import software.amazon.nio.spi.s3.S3XFileSystemProvider;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.nio.file.Path;
+import java.util.Optional;
 
 public class SpiAlternativeUtil {
 
-    public static FileSystem getFileSystem(String file) {
-        if (file == null) {
-            throw new IllegalArgumentException("argument is null");
+    private static final Logger log = LoggerFactory.getLogger(SpiAlternativeUtil.class);
+
+    public static FileSystem getFileSystem(String uriStr) {
+        if (uriStr == null) {
+            throw new IllegalArgumentException("uri is null");
         }
-        if (file.startsWith("s3:")) {
-            var provider = new S3FileSystemProvider();
-            String rootPath = Stream.of(file.split("/")).limit(3).collect(Collectors.joining("/"));
-            System.out.println(rootPath);
-            return provider.getFileSystem(URI.create(rootPath));
+        URI uri = URI.create(uriStr);
+        String scheme = Optional.ofNullable(uri.getScheme()).orElse("file");
+        try {
+            return switch (scheme) {
+                case "s3" -> {
+                    var provider = new S3FileSystemProvider();
+                    String bucket = uri.getAuthority();
+                    yield provider.getFileSystem(new URI(scheme, bucket, null, null, null));
+                }
+                case "s3x" -> {
+                    var provider = new S3XFileSystemProvider();
+                    String userInfo = uri.getUserInfo();
+                    String host = uri.getHost();
+                    int port = uri.getPort();
+                    String[] pathSplit = uri.getPath().split("/");
+                    String bucket = pathSplit.length > 0 ? pathSplit[0] : null;
+                    yield provider.getFileSystem(new URI(scheme, userInfo, host, port, bucket, null, null));
+                }
+                case "file" -> FileSystems.getDefault();
+                default -> Path.of(uri).getFileSystem();
+            };
+        } catch (URISyntaxException ex) {
+            log.error(ex.getMessage());
         }
-        if (file.startsWith("s3x:")) {
-            var provider = new S3XFileSystemProvider();
-            String rootPath = Stream.of(file.split("/")).limit(4).collect(Collectors.joining("/"));
-            System.out.println(rootPath);
-            return provider.getFileSystem(URI.create(rootPath));
-        }
-        return FileSystems.getFileSystem(URI.create("file:/"));
+        log.warn("URI Schema problem. Fallback to 'file:/'");
+        return FileSystems.getDefault();
     }
 }
